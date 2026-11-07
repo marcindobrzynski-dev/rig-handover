@@ -77,3 +77,65 @@ page again with `LANE_MARKER` unset (the banner reads "no marker set") and uploa
 link. Move this plan to `docs/plans/done/` with its issue list.
 
 Done when: the preview link no longer shows the lane marker.
+
+## Decisions
+
+Settled 2026-11-07 by Marcin Dobrzyński before the split. They bind every issue of this plan.
+
+### Reader (§1)
+
+- `runs` = number of lines a job has in the night; `retries` = number of its lines with
+  status `retry`.
+- `lastError` = the last `error` seen for the job in the night, even when its last line is `ok`.
+  No error in the night → `—`.
+- A bad line = a line that is not valid JSON, or valid JSON that does not match the row schema
+  (missing `at`/`job`, status outside `ok | retry | fail`). Blank lines are skipped, not counted.
+- `readNight(runsDir, night)` returns `{ rows: DigestRow[], badLinesCount: number }`. The page
+  shows the count; the JSON carries it.
+- Counting lives in its own file in `src/digest/` (`countNight(rows): NightCounts`), signature
+  in `types.ts`. Views only render what it returns.
+- Times stay full ISO 8601 with the log's offset, e.g. `2026-10-29T05:00:04+01:00`.
+
+### Routes (§2)
+
+- One definition of a night in the repo: `^\d{4}-\d{2}-\d{2}$`. A `:night` that does not match
+  → 404, same as a night with no file. No 400.
+- Deviation from §1: the contract issue also adds `GET /digest/:night` and
+  `GET /api/digest/:night` to `src/app.tsx` answering 501, so route tests can be written before
+  the routes exist.
+- Row marking: a row with any `fail` line, or `retries >= 3`, gets class `.warn` (red) **and**
+  plain text in the cell (`fail`, `3 retries`), so an agent reading the HTML sees it too.
+- Board counts are per job, not per line: `ok` = jobs whose last status is `ok`, `fail` = jobs
+  whose last status is `fail`, `retried` = jobs with at least one `retry` line.
+  2026-10-28 → `4 ok · 2 retried · 1 fail`.
+
+### Work order
+
+- §1 splits into two issues: contract (`types.ts` + 501 stubs; done when `pnpm typecheck` passes
+  and both routes answer 501) and reader (+ counting file + reader tests).
+- Route tests (§2d) are written right after the contract merges and are expected red until the
+  page and the JSON land. The page (§2a) and the JSON (§2b) start only after the tests merge;
+  they are done when those tests go green.
+- Blocked by: reader ← contract; tests ← contract; page, JSON ← tests; board ← reader, page;
+  preview ← page, JSON, board, tests; clean up ← preview.
+- Branches: page and JSON will both touch `src/app.tsx`; rebase onto `develop` before the PR.
+- Models: contract → Opus 5.5; reader and route tests → Fable 5.1 (tests must check business
+  inputs and outputs, no tautological or characterisation tests); page, JSON, board, preview,
+  clean up → Sonnet 5.5.
+- Every issue: `Source: plan.md § <n>`, `Scope`, `Done when` (verbatim from the plan),
+  `Blocked by`, `Read` (AGENTS.md, styleguide, cited ADRs, this section), `Model`; label
+  `plan:morning-digest`; title `<area>: <what>`.
+
+### Preview (§3, §4)
+
+- Host: Netlify, one site, the page saved as `index.html`, so the link is the site root.
+  `netlify deploy --prod --dir <folder> --no-build --site <name>`; the same command re-uploads
+  over the same link in §4.
+- The file is made by a command while rig runs:
+  `curl -fsS http://localhost:8787/digest/2026-10-28 -o <folder>/index.html`, into a folder
+  outside the repo (the OS temp dir). Nothing is added to `.gitignore`.
+- Only the lane marker comes off in §4. Job names, owners and error texts stay public
+  (ADR 0003 covers the marker only).
+- Clean up moves this file to `docs/plans/done/2026-10-29-morning-digest.md`. Merging `develop`
+  into `main` is the lead's release step, outside the issues.
+- Every upload and every other outside action waits for the lead's yes.
