@@ -1,7 +1,6 @@
 import { rowWarnings } from '../digest/row-warnings.js';
 import type { ReadNightResult } from '../digest/types.js';
-
-const MISSING = '—';
+import { MISSING } from '../digest/constants.js';
 
 function badLinesText(count: number) {
   return `${count} bad ${count === 1 ? 'line' : 'lines'}`;
