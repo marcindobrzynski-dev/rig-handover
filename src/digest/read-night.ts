@@ -52,7 +52,10 @@ function parseLine(line: string): RunLine | null {
   };
 }
 
-/** Folds the valid lines into one row per job, sorted by job. */
+/**
+ * Folds the valid lines into one row per job, sorted by job. The owner is the first line's:
+ * when the lines disagree the reader does not guess, and a `null` stays `null` (rendered `—`).
+ */
 function foldLines(lines: Iterable<RunLine>): DigestRow[] {
   const rows = new Map<string, DigestRow>();
   for (const line of lines) {
@@ -79,7 +82,6 @@ function foldLines(lines: Iterable<RunLine>): DigestRow[] {
     row.lastStatus = line.status;
     row.lastAt = line.at;
     if (line.error !== null) row.lastError = line.error;
-    if (row.owner === null) row.owner = line.owner;
   }
 
   return [...rows.values()].sort((left, right) => {

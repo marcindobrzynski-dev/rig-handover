@@ -98,6 +98,14 @@ describe('readNight edge rules (temp runs dir)', () => {
     });
   });
 
+  it('owner comes from the first line; a later line never fills in a null', () => {
+    const result = readTempNight('2026-01-05', [
+      '{"at":"2026-01-05T23:00:00+01:00","job":"c","status":"retry","owner":null,"error":"boom"}',
+      '{"at":"2026-01-05T23:05:00+01:00","job":"c","status":"ok","owner":"rook"}',
+    ]);
+    expect(result.rows[0]).toMatchObject({ owner: null, runs: 2, lastStatus: 'ok' });
+  });
+
   it('an empty file is a night with no rows and no bad lines', () => {
     expect(readTempNight('2026-01-03', [])).toEqual({ rows: [], badLinesCount: 0 });
   });
