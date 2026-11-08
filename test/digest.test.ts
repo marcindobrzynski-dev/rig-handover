@@ -29,8 +29,17 @@ describe('readNight on runs/2026-10-28.jsonl', () => {
   });
 
   it('notes/backup failed once; digest/render ran with no owner and no error', () => {
-    expect(rowsByJob['notes/backup']).toMatchObject({ runs: 1, fails: 1, lastStatus: 'fail', lastError: 'quota exceeded' });
-    expect(rowsByJob['digest/render']).toMatchObject({ owner: null, lastStatus: 'ok', lastError: null });
+    expect(rowsByJob['notes/backup']).toMatchObject({
+      runs: 1,
+      fails: 1,
+      lastStatus: 'fail',
+      lastError: 'quota exceeded',
+    });
+    expect(rowsByJob['digest/render']).toMatchObject({
+      owner: null,
+      lastStatus: 'ok',
+      lastError: null,
+    });
   });
 
   it('rows come sorted by job', () => {
@@ -93,8 +102,8 @@ describe('readNight edge rules (temp runs dir)', () => {
     expect(readTempNight('2026-01-03', [])).toEqual({ rows: [], badLinesCount: 0 });
   });
 
-  it('a night with no file throws, so the route can answer 404', () => {
-    expect(() => readNight(tempRunsDir, '2026-01-04')).toThrow();
+  it('a night with no file throws ENOENT, so the route can answer 404', () => {
+    expect(() => readNight(tempRunsDir, '2026-01-04')).toThrow(/ENOENT/);
   });
 
   it('refuses a :night that is not YYYY-MM-DD', () => {

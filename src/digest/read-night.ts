@@ -20,6 +20,11 @@ function isRunStatus(value: unknown): value is RunStatus {
   return typeof value === 'string' && STATUSES.has(value);
 }
 
+/** A field that may be a string, `null`, or absent. */
+function isOptionalString(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || typeof value === 'string';
+}
+
 // The edge: everything after this trusts the types. A line is bad when it is not valid JSON or
 // does not match the row schema (plan.md § Decisions, Reader). `owner` may be null or absent;
 // `error` is optional. Any field of the wrong type makes the line bad.
@@ -32,11 +37,11 @@ function parseLine(line: string): RunLine | null {
   }
 
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
-  
+
   const parsedLine = value as Record<string, unknown>;
-  if (typeof parsedLine.at !== 'string' || typeof parsedLine.job !== 'string' || !isRunStatus(parsedLine.status)) return null;
-  if (parsedLine.owner !== undefined && parsedLine.owner !== null && typeof parsedLine.owner !== 'string') return null;
-  if (parsedLine.error !== undefined && parsedLine.error !== null && typeof parsedLine.error !== 'string') return null;
+  if (typeof parsedLine.at !== 'string' || typeof parsedLine.job !== 'string') return null;
+  if (!isRunStatus(parsedLine.status)) return null;
+  if (!isOptionalString(parsedLine.owner) || !isOptionalString(parsedLine.error)) return null;
 
   return {
     at: parsedLine.at,
@@ -48,7 +53,7 @@ function parseLine(line: string): RunLine | null {
 }
 
 /** Folds the valid lines into one row per job, sorted by job. */
-export function foldLines(lines: Iterable<RunLine>): DigestRow[] {
+function foldLines(lines: Iterable<RunLine>): DigestRow[] {
   const rows = new Map<string, DigestRow>();
   for (const line of lines) {
     const row = rows.get(line.job);
@@ -77,7 +82,11 @@ export function foldLines(lines: Iterable<RunLine>): DigestRow[] {
     if (row.owner === null) row.owner = line.owner;
   }
 
-  return [...rows.values()].sort((left, right) => (left.job < right.job ? -1 : left.job > right.job ? 1 : 0));
+  return [...rows.values()].sort((left, right) => {
+    if (left.job < right.job) return -1;
+    if (left.job > right.job) return 1;
+    return 0;
+  });
 }
 
 /**
@@ -92,7 +101,7 @@ export const readNight: ReadNight = (runsDir, night): ReadNightResult => {
   let badLinesCount = 0;
   for (const rawLine of text.split(/\r?\n/)) {
     if (rawLine.trim() === '') continue;
-    
+
     const line = parseLine(rawLine);
     if (line === null) badLinesCount += 1;
     else validLines.push(line);
