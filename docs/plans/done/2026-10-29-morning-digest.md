@@ -1,8 +1,9 @@
 ---
 plan: morning-digest
-status: ready
+status: done
 owner: rook
 opened: 2026-10-29
+closed: 2026-11-08
 ---
 
 # Morning digest
@@ -139,3 +140,16 @@ Settled 2026-11-07 by Marcin Dobrzyński before the split. They bind every issue
 - Clean up moves this file to `docs/plans/done/2026-10-29-morning-digest.md`. Merging `develop`
   into `main` is the lead's release step, outside the issues.
 - Every upload and every other outside action waits for the lead's yes.
+
+## Issues
+
+| # | Issue | Blocked by | Worker | Closed |
+|---|-------|-----------|--------|--------|
+| 3 | digest: contract types.ts + 501 stubs | — | claude-code · claude-opus-5-5 · medium | 2026-11-08 |
+| 4 | digest: run log reader, counting, reader tests | #3 | claude-code · claude-fable-5-1 · medium | 2026-11-08 |
+| 5 | digest: route tests for page and JSON (red first) | #3 | claude-code · claude-fable-5-1 · medium | 2026-11-08 |
+| 6 | digest: GET /digest/:night page | #5 | claude-code · claude-sonnet-5-5 · high | 2026-11-08 |
+| 7 | api: GET /api/digest/:night JSON | #5 | claude-code · claude-sonnet-5-5 · high | 2026-11-08 |
+| 8 | board: link each night to its digest with per-job counts | #4, #6 | claude-code · claude-sonnet-5-5 · high | 2026-11-08 |
+| 9 | preview: save /digest/2026-10-28 as HTML, publish on Netlify, send reviewer | #5, #6, #7, #8 | claude-code · claude-sonnet-5-5 · high | 2026-11-08 |
+| 10 | clean up: re-upload without marker, archive plan | #9 | claude-code · claude-sonnet-5-5 · high | 2026-11-08 |
