@@ -48,3 +48,9 @@ export type NightCounts = {
 };
 
 export type CountNight = (rows: DigestRow[]) => NightCounts;
+
+/** One night on disk with its per-job counts; `counts` is `null` when the night can't be loaded. */
+export type NightSummary = {
+  night: string;
+  counts: NightCounts | null;
+};
