@@ -18,5 +18,9 @@ export function createApp(config: RigConfig = loadConfig()) {
     ),
   );
 
+  // Contract stubs (issue #3): answer 501 until the page (§2a) and the JSON (§2b) land.
+  app.get('/digest/:night', (c) => c.text('not implemented', 501));
+  app.get('/api/digest/:night', (c) => c.json({ error: 'not implemented' }, 501));
+
   return app;
 }
