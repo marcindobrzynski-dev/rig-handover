@@ -15,16 +15,32 @@ const MISSING_NIGHT = '2026-11-01';
 // Written out of job order on purpose: the page sorts by job (§2a).
 const nightLines = [
   { at: '2026-10-28T23:00:02+01:00', job: 'zeta/rotate-logs', status: 'ok', owner: 'lane-07' },
-  { at: '2026-10-29T01:30:00+01:00', job: 'mid/refresh', status: 'retry', owner: 'rook', error: 'upstream 503' },
+  {
+    at: '2026-10-29T01:30:00+01:00',
+    job: 'mid/refresh',
+    status: 'retry',
+    owner: 'rook',
+    error: 'upstream 503',
+  },
   { at: '2026-10-29T01:37:00+01:00', job: 'mid/refresh', status: 'ok', owner: 'rook' },
-  { at: '2026-10-29T04:00:01+01:00', job: 'alpha/backup', status: 'fail', owner: null, error: 'quota exceeded' },
+  {
+    at: '2026-10-29T04:00:01+01:00',
+    job: 'alpha/backup',
+    status: 'fail',
+    owner: null,
+    error: 'quota exceeded',
+  },
 ];
 const jobsSortedByJob = ['alpha/backup', 'mid/refresh', 'zeta/rotate-logs'];
 
 const badLinesNight = [
-  JSON.stringify({ at: '2026-10-31T23:00:00+01:00', job: 'only/job', status: 'ok', owner: 'rook' }),
+  JSON.stringify({
+    at: '2026-10-31T23:00:00+01:00', job: 'only/job', status: 'ok', owner: 'rook',
+  }),
   '{not json at all',
-  JSON.stringify({ at: '2026-10-31T23:05:00+01:00', job: 'only/job', status: 'meh', owner: 'rook' }),
+  JSON.stringify({
+    at: '2026-10-31T23:05:00+01:00', job: 'only/job', status: 'meh', owner: 'rook',
+  }),
   '',
 ].join('\n');
 
@@ -33,10 +49,18 @@ let app: ReturnType<typeof createApp>;
 
 beforeAll(() => {
   runsDir = mkdtempSync(join(tmpdir(), 'rig-digest-'));
-  writeFileSync(join(runsDir, `${NIGHT}.jsonl`), nightLines.map((line) => JSON.stringify(line)).join('\n') + '\n');
+  writeFileSync(
+    join(runsDir, `${NIGHT}.jsonl`),
+    nightLines.map((line) => JSON.stringify(line)).join('\n') + '\n',
+  );
   writeFileSync(join(runsDir, `${EMPTY_NIGHT}.jsonl`), '');
   writeFileSync(join(runsDir, `${BAD_LINES_NIGHT}.jsonl`), badLinesNight);
-  app = createApp({ adapter: 'shim', installed: '2026-10-29T14:06:00+01:00', beatEverySeconds: 60, runsDir });
+  app = createApp({
+    adapter: 'shim',
+    installed: '2026-10-29T14:06:00+01:00',
+    beatEverySeconds: 60,
+    runsDir,
+  });
 });
 
 afterAll(() => rmSync(runsDir, { recursive: true, force: true }));
@@ -107,10 +131,13 @@ describe('GET /api/digest/:night', () => {
     expect(res.status).toBe(404);
   });
 
-  it.each(['latest', '2026-1-5'])('is 404 for a :night that is not YYYY-MM-DD (%s)', async (night) => {
-    const { res } = await api(night);
-    expect(res.status).toBe(404);
-  });
+  it.each(['latest', '2026-1-5'])(
+    'is 404 for a :night that is not YYYY-MM-DD (%s)',
+    async (night) => {
+      const { res } = await api(night);
+      expect(res.status).toBe(404);
+    },
+  );
 
   it('returns no rows for the empty night', async () => {
     const { res, body } = await api(EMPTY_NIGHT);
@@ -133,7 +160,7 @@ describe('page and JSON agree (ADR 0001)', () => {
 
     const jobs = body?.rows.map((row) => row.job) ?? [];
     expect(jobs).toEqual(jobsSortedByJob);
-    
+
     const positions = positionsIn(html, jobs);
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((left, right) => left - right));
